@@ -1,8 +1,6 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import mysql from 'mysql'
-import { CONNREFUSED } from 'dns';
-import { isNull } from 'util';
 const app = express();
 const port = 8080;
 
@@ -19,7 +17,8 @@ const con = mysql.createConnection({
 	user:'root',
 	password: '1234',
 	database: 'diplom',
-	port: 3306
+	port: 3306,
+	insecureAuth : true
 })
  
 app.use(bodyParser.text()) 
@@ -106,6 +105,8 @@ app.get('/admin/start', (req, res)=> {
 	})
 })
 
+/*ADD COURSE NAME*/ 
+
 app.post('/admin/addcourse', (req, res) =>{
 	const course = req.body
 	con.query('SELECT * FROM courses', (err, data) => {
@@ -114,15 +115,15 @@ app.post('/admin/addcourse', (req, res) =>{
 		})
 		const empty = {
 			statusEror: true,
-			message:`Пустое значение`
+			message:`Ошибка: пустое значение`
 		}
 		const ok = {
 			statusEror: false,
-			message: `Добавлен ${course}`
+			message: `Успешно: добавлен "${course}"`
 		}
 		const fail = {
 			statusEror: true,
-			message:`Ошибка, ${course} уже существует`
+			message:`Ошибка: "${course}" уже существует`
 		}
 		if (course === ' ' || course === '') {
 			res.setHeader('Content-Type', 'application/json');
@@ -139,7 +140,7 @@ app.post('/admin/addcourse', (req, res) =>{
 			}
 		}
 		if (rule) {
-			con.query(`INSERT INTO courses (courseName, courseRating) VALUE("${course}", 0)`);
+			con.query(`INSERT INTO courses (courseName, rating) VALUE("${course}", 0)`);
 			res.setHeader('Content-Type', 'application/json');
 			res.send(ok)
 		} else {
@@ -150,31 +151,31 @@ app.post('/admin/addcourse', (req, res) =>{
 })
 
 app.post('/admin/addtheme', (req, res) =>{
-	const course = req.body
-	con.query('SELECT * FROM courses', (err, data) => {
-		const arr = data.map((course)=> {
-			return course.courseName
+	const theme = req.body.split(',')
+	con.query(`SELECT * FROM themes WHERE courseName='${theme[0]}'`, (err, data) => {
+		const arr = data.map((theme)=> {
+			return theme.theme
 		})
 		const empty = {
 			statusEror: true,
-			massage:`Пустое значение`
+			message:`Ошибка: пустое значение`
 		}
 		const ok = {
 			statusEror: false,
-			massage: `Добавлен ${course}`
+			message: `Успешно: добавлен "${theme[1]}"`
 		}
 		const fail = {
 			statusEror: true,
-			massage:`Ошибка, ${course} уже существует`
+			message:`Ошибка: "${theme[1]}" уже существует`
 		}
-		if (course === ' ' || course === '') {
+		if (theme[1] === ' ' || theme[1] === '') {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(empty)
 			return;
 		}
 		let rule = false
 		for (let i = 0; i < arr.length; i++) {
-			if (course !== arr[i]) {
+			if (theme[1] !== arr[i]) {
 				rule = true
 			} else {
 				rule = false
@@ -182,13 +183,13 @@ app.post('/admin/addtheme', (req, res) =>{
 			}
 		}
 		if (rule) {
-			con.query(`INSERT INTO courses (courseName, courseRating) VALUE("${course}", 0)`);
+			con.query(`INSERT INTO themes (courseName, theme, rating) VALUE("${theme[0]}", "${theme[1]}", 0)`);
 			res.setHeader('Content-Type', 'application/json');
 			res.send(ok)
 		} else {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(fail)
-		} 
+		}
 	})
 })
 
