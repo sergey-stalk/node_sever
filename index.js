@@ -27,7 +27,7 @@ app.use(bodyParser.json())
 
 //get all data
 app.get('/admin/start', (req, res)=> {
-	console.log('request url: '+ req.url)
+	/* console.log('request url: '+ req.url) */
 
 	const arrCourses = {}
 
@@ -100,6 +100,18 @@ app.get('/admin/start', (req, res)=> {
 			})
 			arrCourses.testAnswer = testAnswer
 		}
+		
+	})
+	con.query('SELECT * FROM themes', (err, data)=>{
+		if (err) {
+			console.log(err);
+		} else {
+			
+			const ltheme = data.map((theme)=>{
+				return {ltheme: theme.theme, lcourse:theme.courseName} 
+			})
+			arrCourses.ltheme = ltheme
+		}
 		res.setHeader('Content-Type', 'application/json');
 		res.send(arrCourses);
 	})
@@ -152,10 +164,12 @@ app.post('/admin/addcourse', (req, res) =>{
 
 app.post('/admin/addtheme', (req, res) =>{
 	const theme = req.body.split(',')
-	con.query(`SELECT * FROM themes WHERE courseName='${theme[0]}'`, (err, data) => {
+	con.query(`SELECT * FROM themes`, (err, data) => {
 		const arr = data.map((theme)=> {
 			return theme.theme
 		})
+		console.log(arr)
+		console.log(theme)
 		const empty = {
 			statusEror: true,
 			message:`Ошибка: пустое значение`
@@ -189,6 +203,260 @@ app.post('/admin/addtheme', (req, res) =>{
 		} else {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(fail)
+		}
+	})
+})
+
+app.post('/admin/addlessons', (req, res) =>{
+		const lesson = req.body.split(',')
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: пустое значение`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: добавлен "${lesson[1]}"`
+		}
+		if (lesson[1] === ' ' || lesson[1] === '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		}
+			con.query(`INSERT INTO lessons (theme, lesson) VALUE("${lesson[0]}", "${lesson[1]}")`);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+})
+
+app.post('/admin/addqst', (req, res) =>{
+	const qst = req.body.split(',')
+	con.query(`SELECT * FROM qst`, (err, data) => {
+		const arr = data.map((qst)=> {
+			return qst.qst
+		})
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: пустое значение`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: добавлен "${qst[1]}"`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: "${qst[1]}" уже существует`
+		}
+		if (qst[1] === ' ' || qst[1] === '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		}
+		let rule = false
+		for (let i = 0; i < arr.length; i++) {
+			if (qst[1] !== arr[i]) {
+				rule = true
+			} else {
+				rule = false
+				break
+			}
+		}
+		if (rule) {
+			con.query(`INSERT INTO qst (theme, qst, rating) VALUE("${qst[0]}", "${qst[1]}", 0)`);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		}
+	})
+})
+
+app.post('/admin/addtest', (req, res) =>{
+	const test = req.body.split(',')
+	con.query(`SELECT * FROM test`, (err, data) => {
+		const arr = data.map((test)=> {
+			return test.test
+		})
+		console.log(arr)
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: пустое значение`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: добавлен "${test[1]}"`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: "${test[1]}" уже существует`
+		}
+		if (test[1] === ' ' || test[1] === '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		}
+		let rule = false
+		for (let i = 0; i < arr.length; i++) {
+			if (test[1] !== arr[i]) {
+				rule = true
+			} else {
+				rule = false
+				break
+			}
+		}
+		if (rule) {
+			con.query(`INSERT INTO test (theme, test) VALUE("${test[0]}", "${test[1]}")`);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		}
+		rule = false;
+	})
+})
+
+app.post('/admin/addqstanswer', (req, res) =>{
+	const qa = req.body.split(',')
+	con.query(`SELECT * FROM qstanswers`, (err, data) => {
+		const arr = data.map((qa)=> {
+			return qa.qstAnswer
+		})
+		console.log(arr)
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: пустое значение`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: добавлен "${qa[1]}"`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: "${qa[1]}" уже существует`
+		}
+		if (qa[1] === ' ' || qa[1] === '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		}
+		let rule = false
+		for (let i = 0; i < arr.length; i++) {
+			if (qa[1] !== arr[i]) {
+				rule = true
+			} else {
+				rule = false
+				break
+			}
+		}
+		if (rule) {
+			con.query(`INSERT INTO qstanswers (qst, qstAnswer, rqst) VALUE("${qa[0]}", "${qa[1]}", "${qa[2]}")`);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		}
+		rule = false;
+	})
+})
+
+app.post('/admin/addtestanswer', (req, res) =>{
+	const ta = req.body.split(',')
+	con.query(`SELECT * FROM testanswers`, (err, data) => {
+		const arr = data.map((ta)=> {
+			console.log(data)
+			return ta.testAnswer
+		})
+		console.log(arr)
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: пустое значение`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: добавлен "${ta[1]}"`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: "${ta[1]}" уже существует`
+		}
+		if (ta[1] === ' ' || ta[1] === '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		}
+		let rule = false
+		for (let i = 0; i < arr.length; i++) {
+			if (ta[1] !== arr[i]) {
+				rule = true
+			} else {
+				rule = false
+				break
+			}
+		}
+		if (rule) {
+			con.query(`INSERT INTO testanswers (test, testAnswer, rtest) VALUE("${ta[0]}", "${ta[1]}", "${ta[2]}")`);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		}
+		rule = false;
+	})
+})
+
+app.post('/admin/showlesson', (req, res) =>{
+	con.query(`SELECT lesson FROM lessons WHERE theme='${req.body}'`, (err, data) => {
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: Лекции не существует`
+		}
+		
+		if (data == '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send([data[0].lesson])
+		}
+	})
+})
+
+app.post('/admin/showquest', (req, res) =>{
+	con.query(`SELECT qstAnswer, rqst  FROM qstAnswers WHERE qst='${req.body}'`, (err, data) => {
+
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: Ответа не существует`
+		}
+		console.log(data)
+		if (data == '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(data)
+		}
+	})
+})
+
+app.post('/admin/showtest', (req, res) =>{
+	con.query(`SELECT testAnswer, rtest  FROM testAnswers WHERE test='${req.body}'`, (err, data) => {
+
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: Ответа не существует`
+		}
+		if (data == '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+			return;
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(data)
 		}
 	})
 })
