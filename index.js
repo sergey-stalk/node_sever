@@ -461,6 +461,31 @@ app.post('/admin/showtest', (req, res) =>{
 	})
 })
 
+app.post('/admin/delete', (req, res) =>{
+	const reqArr = req.body.split(',')
+	con.query(`DELETE FROM ${reqArr[0]} WHERE ${reqArr[2]}='${reqArr[1]}'`, (err, data) => {
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: Лекции не существует`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Успешно: Удалено "${reqArr[1]}"`
+		}
+		if (reqArr[0] == 'lessons') {
+			con.query(`SELECT lesson FROM lessons WHERE theme = '${reqArr[1]}'`, (err, data)=>{
+				if (data == '') {
+					res.setHeader('Content-Type', 'application/json');
+					res.send(empty)
+				}
+			})
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		}
+	})
+})
+
 const server = app.listen(port, () => {
 	console.log('Server is up and running on port ' + port)
 });
