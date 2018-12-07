@@ -168,8 +168,7 @@ app.post('/admin/addtheme', (req, res) =>{
 		const arr = data.map((theme)=> {
 			return theme.theme
 		})
-		console.log(arr)
-		console.log(theme)
+
 		const empty = {
 			statusEror: true,
 			message:`Ошибка: пустое значение`
@@ -276,7 +275,6 @@ app.post('/admin/addtest', (req, res) =>{
 		const arr = data.map((test)=> {
 			return test.test
 		})
-		console.log(arr)
 		const empty = {
 			statusEror: true,
 			message:`Ошибка: пустое значение`
@@ -321,7 +319,6 @@ app.post('/admin/addqstanswer', (req, res) =>{
 		const arr = data.map((qa)=> {
 			return qa.qstAnswer
 		})
-		console.log(arr)
 		const empty = {
 			statusEror: true,
 			message:`Ошибка: пустое значение`
@@ -364,10 +361,8 @@ app.post('/admin/addtestanswer', (req, res) =>{
 	const ta = req.body.split(',')
 	con.query(`SELECT * FROM testanswers`, (err, data) => {
 		const arr = data.map((ta)=> {
-			console.log(data)
 			return ta.testAnswer
 		})
-		console.log(arr)
 		const empty = {
 			statusEror: true,
 			message:`Ошибка: пустое значение`
@@ -412,7 +407,6 @@ app.post('/admin/showlesson', (req, res) =>{
 			statusEror: true,
 			message:`Ошибка: Лекции не существует`
 		}
-		
 		if (data == '') {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(empty)
@@ -431,7 +425,6 @@ app.post('/admin/showquest', (req, res) =>{
 			statusEror: true,
 			message:`Ошибка: Ответа не существует`
 		}
-		console.log(data)
 		if (data == '') {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(empty)
@@ -479,6 +472,83 @@ app.post('/admin/delete', (req, res) =>{
 					res.send(empty)
 				}
 			})
+		} else {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		}
+	})
+})
+app.post('/registration', (req, res) =>{
+	const reqArr = req.body.split(',')
+	con.query(`SELECT login FROM users`, (err, data) => {
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: заполните все поля`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Пользователь создан "${reqArr[0]}", теперь вы можите войти`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: "${reqArr[0]}" уже существует`
+		}
+		let rule = false
+		for (let i = 0; i < data.length; i++) {
+			if (reqArr[0] !== data[i]) {
+				rule = true
+			} else {
+				rule = false
+				break
+			}
+		}
+		if (reqArr[2] !== reqArr [3]) {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		} else if (reqArr[0] == '' || reqArr[1] == '' || reqArr[2] == '' || reqArr[3] == '' || reqArr[0] == ' ' || reqArr[1] == ' ' || reqArr[2] == ' ' || reqArr[3] == ' ' || reqArr[0] == '  ' || reqArr[1] == '  ' || reqArr[2] == '  ' || reqArr[3] == '  ') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
+		} else if(rule) {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		} else {
+			con.query(`INSERT INTO users (login, password, groupe) VALUE("${reqArr[0]}", "${reqArr[2]}", "${reqArr[1]}")`)
+			res.setHeader('Content-Type', 'application/json');
+			res.send(ok)
+		}
+		rule = false;
+	})
+})
+
+app.post('/enter', (req, res) =>{
+	const reqArr = req.body.split(',')
+	con.query(`SELECT password FROM users WHERE login="${reqArr[0]}"`, (err, data) => {
+	
+		const arrPass = data.map((el)=> {
+			return el.password
+		}) 
+		console.log(data[0])
+		const empty = {
+			statusEror: true,
+			message:`Ошибка: заполните все поля`
+		}
+		const ok = {
+			statusEror: false,
+			message: `Добро пожаловать ${reqArr[0]}`
+		}
+		const fail = {
+			statusEror: true,
+			message:`Ошибка: не верный логин или пароль`
+		}
+		if (data == '') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		} else if (data[0].password != reqArr[1]) {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(fail)
+		} else if (reqArr[0] == '' || reqArr[0] == ' ' || reqArr[0] == '  ' || reqArr[1] == '' || reqArr[1] == ' ' || reqArr[1] == '  ') {
+			res.setHeader('Content-Type', 'application/json');
+			res.send(empty)
 		} else {
 			res.setHeader('Content-Type', 'application/json');
 			res.send(ok)
